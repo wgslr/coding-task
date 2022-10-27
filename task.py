@@ -12,18 +12,32 @@ class ParsingError(Exception):
 
 
 def main():
+    task_A()
+
+
+def task_A():
+    # assumes input is a single line
     line = input()
-    pprint(keyvalue_to_dict(line))
+    parsed = keyvalue_to_dict(line)
+
 
 
 def keyvalue_to_dict(string: str) -> dict:
-    """Parses a colon-delimtied key-value data into a dict"""
+    """Parses a colon-delimtied key-value data into a dict.
+    Validates
+    """
 
     result = {}
 
-    # split into substring with each holding one key and value
-    single_pair_regex = re.compile(r'[^:\s]+: ".*?(?<!\\)"')
-    pairs = single_pair_regex.findall(string)
+    # regex describing a single key-value pair format
+    single_pair_regex = r'[^:\s]+: ".*?(?<!\\)"'
+
+    # validate that the whole input consists only of valid key-value pairs
+    input_validation_regex = f"({single_pair_regex})?"
+    if re.fullmatch(input_validation_regex, string) is None:
+        raise ParsingError("Input is not a well-formed series of key-values")
+
+    pairs = re.findall(single_pair_regex, string)
 
     # regex for separating the key from the value
     # The quotes are not checked for escape pattern, as the previous regex
@@ -39,9 +53,6 @@ def keyvalue_to_dict(string: str) -> dict:
         result[key] = value.replace('\\"', '"')
 
     return result
-
-    # while True:
-    #     key, rest = string.split(": ", 1)
 
 
 if __name__ == "__main__":
