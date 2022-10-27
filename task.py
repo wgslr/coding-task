@@ -4,12 +4,19 @@
 This is the main file containing the task solution.
 """
 
-from cgi import parse_multipart
 import json
 import re
-from pprint import pprint
 import sys
+from cgi import parse_multipart
 from pathlib import Path
+from pprint import pprint
+from collections import OrderedDict
+
+"""
+Notes on the solution: the input format is quite similar to JSON already.
+So it would be possible to focus only on adding the wrapping brackets and sorrounding key names in quotes.
+I decided to parse it fully to add input validation.
+"""
 
 
 class ParsingError(Exception):
@@ -27,16 +34,16 @@ def task_A():
     print(dict_to_json(parsed))
 
 
-def dict_to_json(d: dict):
+def dict_to_json(d: dict) -> str:
     return json.dumps(d)
 
 
-def keyvalue_to_dict(string: str) -> dict:
+def keyvalue_to_dict(string: str) -> OrderedDict:
     """Parses a colon-delimtied key-value data into a dict.
-    Validates
+    Validates the input.
     """
 
-    result = {}
+    result = OrderedDict()
 
     # regex describing a single key-value pair format
     single_pair_regex = r'[^:\s]+: ".*?(?<!\\)"'
