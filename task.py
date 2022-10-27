@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+This is the main file containing the task solution.
+"""
+
 from cgi import parse_multipart
+import json
 import re
 from pprint import pprint
 import sys
@@ -19,7 +24,11 @@ def task_A():
     # assumes input is a single line
     line = input()
     parsed = keyvalue_to_dict(line)
+    print(dict_to_json(parsed))
 
+
+def dict_to_json(d: dict):
+    return json.dumps(d)
 
 
 def keyvalue_to_dict(string: str) -> dict:
