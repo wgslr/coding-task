@@ -17,16 +17,26 @@ from typing import List
 """
 Notes on the solution
 
-Part A 
-The input format is quite similar to JSON already.
-So it would be possible to focus only on adding the wrapping brackets and sorrounding key names in quotes.
-I decided to parse it fully to add input validation.
+Part A
+I strived to implement input validation and raise errors on inputs not matching
+the described format.  Based on the input example, I assumed that key values
+must not contain whitespace.
+
+I have decided to gather the input into a in-memory dict for later manipulation.
+It allows using a well-tested JSON-encoding library for output and makes it
+easier to write separate unit tests for parsing and encoding.
+
+An alternative solution would be to transcode the input in a streaming fashion,
+item by item, to avoid holding the whole event in memory. It is made easier by
+the fact that the quoted value format is already compliant with JSON.
+
 
 Part B
-My first step was to decode the hint, which I did using the shell `base64 -d` command.
-It says "Hello, try XOR with 0x17F"
+My first step was to decode the hint, which I did using the shell `base64 -d`
+command.  It says "Hello, try XOR with 0x17F"
 
-I tried inspecting the binary representation of the numbers before and after XOR operation. I used python shell:
+I tried inspecting the binary representation of the numbers before and after XOR
+operation. I used the python shell:
 ```
 >>> to_bin = lambda v: f'{v:016b}'
 >>> vals = [0x154,  0x150, 0x14a, 0x144]
@@ -39,11 +49,15 @@ I tried inspecting the binary representation of the numbers before and after XOR
 ['0000000000101011', '0000000000101111', '0000000000110101', '0000000000111011']
 ```
 
-Then, I noticed that the numbers are consecutive primes. Thus, the next number
-following the pattern will be the next prime, 61. The code below replicates this
-reasoning. To obtain the value for 'five', I need to reverse the xor (that is,
-once again perform XOR 0x17f) and convert the number to hexadecimal representation.
+I did not observe a convincing pattern in the bit values. Then, I noticed that
+the numbers are consecutive primes. Thus, the next number following the pattern
+will be the next prime, 61. The code below replicates this reasoning. To obtain
+the value for 'five', I need to reverse the xor (that is, once again perform XOR
+0x17f) and convert the number to hexadecimal representation.
 
+I hardcoded the prime numbers under 100, as they are well known. It would be
+also possible to obtain the new value programmatically, for example by checking
+each value larger than 59 with the Fermat probability test.
 """
 
 
@@ -88,7 +102,7 @@ def main():
 
 
 def task_A():
-    print('part A:')
+    print("part A:")
     # assumes input is a single line
     line = input()
     parsed = keyvalue_to_dict(line)
@@ -98,7 +112,7 @@ def task_A():
 
 
 def task_B(original_event: OrderedDict):
-    print('\npart B:')
+    print("\npart B:")
 
     # The numbers in the original event are contiguous prime numbers.
     # Append a field 'five' with the next prime number.
@@ -128,7 +142,7 @@ def dict_to_json(d: dict) -> str:
 
 
 def keyvalue_to_dict(string: str) -> OrderedDict:
-    """Parses a colon-delimtied key-value data into a dict.
+    """Parses a key-value series into a dict.
     Raises `ParsingError` if the input format is invalid.
     Assumes that keys do not contain whitespace.
     """
@@ -150,7 +164,7 @@ def keyvalue_to_dict(string: str) -> OrderedDict:
             # omit the leading "
             remainder = remainder[1:]
 
-            value, remainder  = re.split(r'(?<!\\)"', remainder, 1)
+            value, remainder = re.split(r'(?<!\\)"', remainder, 1)
 
             # unescape quotes and store the result
             result[key] = value.replace('\\"', '"')

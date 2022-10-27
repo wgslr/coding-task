@@ -1,6 +1,6 @@
 import pytest
 from collections import OrderedDict
-from task import ParsingError, keyvalue_to_dict
+from task import ParsingError, dict_to_keyvalue, keyvalue_to_dict
 
 
 def test_keyvalue_parsing():
@@ -52,3 +52,13 @@ def test_invalid_input_is_rejected():
     with pytest.raises(ParsingError):
         v = keyvalue_to_dict('key0: "comma afterwards", key1: "comma before"')
         print(v)
+
+
+def test_dict_to_keyvalue():
+    assert dict_to_keyvalue({"a": "123", "b": "foobar"}) == 'a: "123" b: "foobar"'
+    assert dict_to_keyvalue({"a": "123", "b": 'fo " bar'}) == 'a: "123" b: "fo \\" bar"'
+
+
+def test_dict_to_keyvalue_preserves_order():
+    assert dict_to_keyvalue(OrderedDict([("a", "1"), ("b", "2")])) == 'a: "1" b: "2"'
+    assert dict_to_keyvalue(OrderedDict([("b", "2"), ("a", "1")])) == 'b: "2" a: "1"'
