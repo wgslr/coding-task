@@ -138,9 +138,11 @@ def keyvalue_to_dict(string: str) -> OrderedDict:
     single_pair_regex = r'[^:\s]+: ".*?(?<!\\)"'
 
     # validate that the whole input consists only of valid key-value pairs
-    input_validation_regex = f"({single_pair_regex})?"
+    input_validation_regex = f"^({single_pair_regex})+$"
     if re.fullmatch(input_validation_regex, string) is None:
         raise ParsingError("Input is not a well-formed series of key-values")
+    else:
+        print(re.fullmatch(input_validation_regex, string))
 
     pairs = re.findall(single_pair_regex, string)
 

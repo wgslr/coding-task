@@ -20,18 +20,26 @@ def test_escaping():
 
 
 def test_ordering():
-    assert keyvalue_to_dict(r'key0: "value0", key1: "value1"') == OrderedDict(
+    assert keyvalue_to_dict(r'key0: "value0" key1: "value1"') == OrderedDict(
         (
             ("key0", "value0"),
             ("key1", "value1"),
         )
     )
-    assert keyvalue_to_dict(r'key1: "value1", key0: "value0"') == OrderedDict(
+    assert keyvalue_to_dict(r'key1: "value1" key0: "value0"') == OrderedDict(
         (
             ("key1", "value1"),
             ("key0", "value0"),
         )
     )
+
+
+def test_whitespace():
+    # mutliple space characfters between pairs
+    assert keyvalue_to_dict(r'key0: "value0"   key1: "value1"') == {
+        "key0": "value0",
+        "key1": "value1",
+    }
 
 
 def test_invalid_input_is_rejected():
@@ -40,3 +48,7 @@ def test_invalid_input_is_rejected():
 
     with pytest.raises(ParsingError):
         keyvalue_to_dict(r"key: unqouted")
+
+    with pytest.raises(ParsingError):
+        v = keyvalue_to_dict('key0: "comma afterwards", key1: "comma before"')
+        print(v)
