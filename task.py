@@ -4,6 +4,7 @@
 This is the main file containing the task solution.
 """
 
+import bisect
 import json
 import re
 import sys
@@ -13,10 +14,67 @@ from pprint import pprint
 from collections import OrderedDict
 
 """
-Notes on the solution: the input format is quite similar to JSON already.
+Notes on the solution
+
+Part A 
+The input format is quite similar to JSON already.
 So it would be possible to focus only on adding the wrapping brackets and sorrounding key names in quotes.
 I decided to parse it fully to add input validation.
+
+Part B
+My first step was to decode the hint, which I did using the shell `base64 -d` command.
+It says "Hello, try XOR with 0x17F"
+
+I tried inspecting the binary representation of the numbers before and after XOR operation. I used python shell:
+```
+>>> to_bin = lambda v: f'{v:016b}'
+>>> vals = [0x154,  0x150, 0x14a, 0x144]
+>>> xored = [(v ^ 0x17f) for v in vals]
+>>> xored
+[43, 47, 53, 59]
+>>> [to_bin(v) for v in vals]
+['0000000101010100', '0000000101010000', '0000000101001010', '0000000101000100']
+>>> [to_bin(v) for v in xored]
+['0000000000101011', '0000000000101111', '0000000000110101', '0000000000111011']
+```
+
+Then, I noticed that the numbers are consecutive primes. Thus, the next number
+following the pattern will be the next prime, 61. The code below replicates this
+reasoning. To obtain the value for 'five', I need to reverse the xor (that is,
+once again perform XOR 0x17f) and convert the number to hexadecimal representation.
+
 """
+
+
+XOR_PATTERN = 0x17F
+
+PRIMES_UNDER_100 = [
+    2,
+    3,
+    5,
+    7,
+    11,
+    13,
+    17,
+    19,
+    23,
+    29,
+    31,
+    37,
+    41,
+    43,
+    47,
+    53,
+    59,
+    61,
+    67,
+    71,
+    73,
+    79,
+    83,
+    89,
+    97,
+]
 
 
 class ParsingError(Exception):
@@ -24,7 +82,8 @@ class ParsingError(Exception):
 
 
 def main():
-    task_A()
+    event = task_A()
+    task_B(event)
 
 
 def task_A():
@@ -33,19 +92,49 @@ def task_A():
     parsed = keyvalue_to_dict(line)
     print(dict_to_json(parsed))
 
+    return parsed
+
+
+def task_B(original_event: OrderedDict):
+
+    # The numbers in the original event are contiguous prime numbers.
+    # Append a field 'five' with the next prime number.
+
+    prev_prime = int(original_event["four"], 16) ^ XOR_PATTERN
+    next_prime = find_first_prime_larger_than(prev_prime)
+
+    # reverse the operations needed to obtain the prime series
+    next_prime_xored = next_prime ^ XOR_PATTERN
+    next_value = hex(next_prime_xored)
+
+    # append obtained value to the original event
+    new_event = OrderedDict((*original_event.items(), ("five", next_value)))
+    serialized = dict_to_keyvalue(new_event)
+    print(serialized)
+
+
+def find_first_prime_larger_than(p: int) -> int:
+    """Finds the next prime after given. Works for numbers < 100"""
+    i = bisect.bisect_right(PRIMES_UNDER_100, p)
+    return PRIMES_UNDER_100[i]
+
 
 def dict_to_json(d: dict) -> str:
+    """Encodes a dict as a JSON string"""
     return json.dumps(d)
 
 
 def keyvalue_to_dict(string: str) -> OrderedDict:
     """Parses a colon-delimtied key-value data into a dict.
-    Validates the input.
+    Raises `ParsingError` if the input format is invalid.
     """
 
     result = OrderedDict()
 
     # regex describing a single key-value pair format
+    # It allows any characters in the key except whitespace.
+    # The value part matches a string wrapped in quotes and makes sure
+    # to ignore escaped quotes.
     single_pair_regex = r'[^:\s]+: ".*?(?<!\\)"'
 
     # validate that the whole input consists only of valid key-value pairs
@@ -69,6 +158,14 @@ def keyvalue_to_dict(string: str) -> OrderedDict:
         result[key] = value.replace('\\"', '"')
 
     return result
+
+
+def dict_to_keyvalue(d: dict) -> str:
+    return " ".join(f'{key}: "{escape_value(value)}"' for key, value in d.items())
+
+
+def escape_value(s: str) -> str:
+    return s.replace('"', r"\"")
 
 
 if __name__ == "__main__":
