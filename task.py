@@ -26,13 +26,18 @@ An alternative solution would be to transcode the input in a streaming fashion,
 item by item, to avoid holding the whole event in memory. It is made easier by
 the fact that the quoted value format is already compliant with JSON.
 
+I also considered doing more of the parsing (`keyvalue_to_dict` function) with
+regular expressions rather than using multiple `split` invocations.
+However, regexes tend to be unreadable and error prone, hence my decision to use
+a more step-by-step approach.
+
 
 Part B
 My first step was to decode the hint, which I did using the shell `base64 -d`
 command.  It says "Hello, try XOR with 0x17F"
 
 I tried inspecting the binary representation of the numbers before and after XOR
-operation. I used the python shell:
+operation. I used the python REPL:
 ```
 >>> to_bin = lambda v: f'{v:016b}'
 >>> vals = [0x154,  0x150, 0x14a, 0x144]
