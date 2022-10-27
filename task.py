@@ -8,11 +8,7 @@ import bisect
 import json
 import re
 import sys
-from cgi import parse_multipart
-from pathlib import Path
-from pprint import pprint
 from collections import OrderedDict
-from typing import List
 
 """
 Notes on the solution
@@ -99,6 +95,8 @@ class ParsingError(Exception):
 def main():
     event = task_A()
     task_B(event)
+
+    return 0
 
 
 def task_A():
