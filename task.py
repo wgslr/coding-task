@@ -88,6 +88,7 @@ def main():
 
 
 def task_A():
+    print('part A:')
     # assumes input is a single line
     line = input()
     parsed = keyvalue_to_dict(line)
@@ -97,6 +98,7 @@ def task_A():
 
 
 def task_B(original_event: OrderedDict):
+    print('\npart B:')
 
     # The numbers in the original event are contiguous prime numbers.
     # Append a field 'five' with the next prime number.
@@ -128,7 +130,7 @@ def dict_to_json(d: dict) -> str:
 def keyvalue_to_dict(string: str) -> OrderedDict:
     """Parses a colon-delimtied key-value data into a dict.
     Raises `ParsingError` if the input format is invalid.
-    Assumes that keys do not contain whitespace
+    Assumes that keys do not contain whitespace.
     """
 
     result = OrderedDict()
@@ -136,7 +138,6 @@ def keyvalue_to_dict(string: str) -> OrderedDict:
     remainder = string.strip()
     try:
         while remainder != "":
-            print(f"begin loop: {remainder!r}")
             key, remainder = remainder.split(": ", 1)
 
             # if there are multiple strings delimited by whitespace
@@ -144,17 +145,14 @@ def keyvalue_to_dict(string: str) -> OrderedDict:
             if re.search("\s", key):
                 raise ParsingError(f"Invalid key: {key!r}")
 
-            print(f"{key=!r} {remainder=!r}")
             if remainder[0] != '"':
                 raise ParsingError("Value must start with a quote")
             # omit the leading "
             remainder = remainder[1:]
 
-            split_result = re.split(r'(?<!\\)"', remainder, 1)
-            print(f"{split_result=!r}")
-            value, remainder = split_result
+            value, remainder  = re.split(r'(?<!\\)"', remainder, 1)
 
-            print(f"{value=!r} {remainder=!r}")
+            # unescape quotes and store the result
             result[key] = value.replace('\\"', '"')
 
             if remainder != "" and remainder[0] != " ":
