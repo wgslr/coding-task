@@ -12,6 +12,7 @@ from cgi import parse_multipart
 from pathlib import Path
 from pprint import pprint
 from collections import OrderedDict
+from typing import List
 
 """
 Notes on the solution
@@ -127,37 +128,43 @@ def dict_to_json(d: dict) -> str:
 def keyvalue_to_dict(string: str) -> OrderedDict:
     """Parses a colon-delimtied key-value data into a dict.
     Raises `ParsingError` if the input format is invalid.
+    Assumes that keys do not contain whitespace
     """
 
     result = OrderedDict()
 
-    # regex describing a single key-value pair format
-    # It allows any characters in the key except whitespace.
-    # The value part matches a string wrapped in quotes and makes sure
-    # to ignore escaped quotes.
-    single_pair_regex = r'[^:\s]+: ".*?(?<!\\)"'
+    remainder = string.strip()
+    try:
+        while remainder != "":
+            print(f"begin loop: {remainder!r}")
+            key, remainder = remainder.split(": ", 1)
 
-    # validate that the whole input consists only of valid key-value pairs
-    input_validation_regex = f"^({single_pair_regex})+$"
-    if re.fullmatch(input_validation_regex, string) is None:
-        raise ParsingError("Input is not a well-formed series of key-values")
-    else:
-        print(re.fullmatch(input_validation_regex, string))
+            # if there are multiple strings delimited by whitespace
+            # before the next ': ', the input must be invalid
+            if re.search("\s", key):
+                raise ParsingError(f"Invalid key: {key!r}")
 
-    pairs = re.findall(single_pair_regex, string)
+            print(f"{key=!r} {remainder=!r}")
+            if remainder[0] != '"':
+                raise ParsingError("Value must start with a quote")
+            # omit the leading "
+            remainder = remainder[1:]
 
-    # regex for separating the key from the value
-    # The quotes are not checked for escape pattern, as the previous regex
-    # guarantees the last quote to not be escaped
-    parse_pair_regex = re.compile(r'([^:\s]+): "(.*)"$')
+            split_result = re.split(r'(?<!\\)"', remainder, 1)
+            print(f"{split_result=!r}")
+            value, remainder = split_result
 
-    for pair in pairs:
-        matched = parse_pair_regex.match(pair)
-        if matched is None:
-            raise ParsingError(f"Could not separete key from value in string: {pair!r}")
+            print(f"{value=!r} {remainder=!r}")
+            result[key] = value.replace('\\"', '"')
 
-        key, value = matched.groups()
-        result[key] = value.replace('\\"', '"')
+            if remainder != "" and remainder[0] != " ":
+                # there must be a space between key-value items
+                raise ParsingError("There must be a space after a closing quote")
+            remainder = remainder.strip()
+
+    except ValueError as e:
+        # handles split() calls returning too few items
+        raise ParsingError("Input is not a well-formed key-value series") from e
 
     return result
 
